@@ -1,22 +1,20 @@
 package com.example.log_benchmark;
 
-import java.time.Instant;
-
 /**
  * @description:
  * @author: bytedance
  * @date: 2020-04-07 11:14
  */
 public class testData {
-    Instant mInstant;
+    long mInstant;
     long mCPU_Time;
     long mMem_usage;
 
-    public Instant getInstant() {
+    public long getInstant() {
         return mInstant;
     }
 
-    public void setInstant(Instant instant) {
+    public void setInstant(long instant) {
         mInstant = instant;
     }
 

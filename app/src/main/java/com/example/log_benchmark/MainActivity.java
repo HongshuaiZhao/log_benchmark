@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.OptionalLong;
 import java.util.logging.Logger;
 
 import static com.ss.android.agilelogger.ALog.getContext;
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private int calculationTimes;
     public static final String TAG = "MainActivity";
     protected int thread_count;
+    public int test_Count;
+    List<testData> mTestDataList = new ArrayList<>();
     List<myThread> mList = new ArrayList<>();
     List<Long> mCPU_time = new ArrayList<>();
 
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         alogInit();
 
 
-
+        final EditText testCount = findViewById(R.id.testcount);
         final EditText editText = findViewById(R.id.ThreadNumber);
         Button commit_button = findViewById(R.id.commit);
         Button Log_start = findViewById(R.id.Log_start);
@@ -55,9 +58,9 @@ public class MainActivity extends AppCompatActivity {
         commit_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                test_Count = Integer.parseInt(testCount.getText().toString());
                 thread_count = Integer.parseInt(editText.getText().toString());
                 calculationTimes = 10000 / thread_count;
-                Log.d(TAG, "onClick: 111");
                 ALog.d("MainActivity", "onClick: " + thread_count);
                 for (int i = 0; i < thread_count; i++) {
                     myThread myThread = new myThread(("myThread" + i), calculationTimes);
@@ -67,43 +70,57 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Log_start.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
-                long meminfoBegin = getAvailableMemory();
-                Instant beginTime = Instant.now();
-                long CPU_begin = 0, CPU_end = 0, CPU_sum = 0;
+                for (int times = 0; times < test_Count; times++) {
+                    testData mytestData = new testData();
+                    long meminfoBegin = getAvailableMemory();
+                    Instant beginTime = Instant.now();
+                    long CPU_begin = 0, CPU_end = 0, CPU_sum = 0;
 
-                for (int i = 0; i < thread_count; i++) {
-                    CPU_begin = Debug.threadCpuTimeNanos();
-                    mList.get(i).start();
-                }
-                for (int i = 0; i < thread_count; i++) {
-                    try {
-                        mList.get(i).join();
-                        CPU_end = Debug.threadCpuTimeNanos();
-                        mCPU_time.add(CPU_end - CPU_begin);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    for (int i = 0; i < thread_count; i++) {
+                        CPU_begin = Debug.threadCpuTimeNanos();
+                        mList.get(i).start();
                     }
+                    for (int i = 0; i < thread_count; i++) {
+                        try {
+                            mList.get(i).join();
+                            CPU_end = Debug.threadCpuTimeNanos();
+                            mCPU_time.add(CPU_end - CPU_begin);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    System.gc();
+
+
+                    Instant endTime = Instant.now();
+                    long meminfoEnd = getAvailableMemory();
+                    for (int i = 0; i < thread_count; i++) {
+                        CPU_sum += mCPU_time.get(i);
+                    }
+                    mytestData.setInstant(Duration.between(beginTime,endTime).toMillis());
+                    mytestData.setCPU_Time(CPU_sum/1000000);
+                    mytestData.setMem_usage(meminfoBegin-meminfoEnd);
+                    mTestDataList.add(mytestData);
+                    ALog.d(TAG, "ToMills: " + Duration.between(beginTime, endTime).toMillis());
+                    ALog.d(TAG, "CPU_SUM_TIME : " + CPU_sum / 1000000);
+                    ALog.d(TAG, "MemoryUsage : " + (meminfoBegin - meminfoEnd));
+                    mList.clear();
                 }
+                calcution();
 
-                System.gc();
-
-
-                Instant endTime = Instant.now();
-                long meminfoEnd = getAvailableMemory();
-                for (int i = 0; i < thread_count; i++) {
-                    CPU_sum += mCPU_time.get(i);
-                }
-
-                ALog.d(TAG, "ToMills: " + Duration.between(beginTime, endTime).toMillis());
-                ALog.d(TAG, "CPU_SUM_TIME : " + CPU_sum/1000000);
-                ALog.d(TAG, "MemoryUsage : " + (meminfoBegin - meminfoEnd));
-                mList.clear();
             }
         });
 
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void calcution(){
+        for(int i=0;i<test_Count;i++){
+            long mtime = mTestDataList.stream().mapToLong(testData::getInstant).max().getAsLong();
+            Log.d(TAG, "calcution: "+mtime);
+        }
     }
 
     public final long getAvailableMemory() {
