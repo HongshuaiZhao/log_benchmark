@@ -8,11 +8,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.ss.android.agilelogger.ALog;
 import com.ss.android.agilelogger.ALogConfig;
+
+import org.w3c.dom.Text;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -44,8 +48,12 @@ public class MainActivity extends AppCompatActivity {
 
         final EditText testCount = findViewById(R.id.testcount);
         final EditText editText = findViewById(R.id.ThreadNumber);
+        TextView timeView = findViewById(R.id.time);
+        TextView cpuView = findViewById(R.id.CPUtime);
+        TextView meminfoView = findViewById(R.id.Meminfo);
         Button commit_button = findViewById(R.id.commit);
         Button Log_start = findViewById(R.id.Log_start);
+
 
         commit_button.setOnClickListener(v -> {
             test_Count = Integer.parseInt(testCount.getText().toString());
@@ -94,14 +102,14 @@ public class MainActivity extends AppCompatActivity {
                 mTestDataList.add(mytestData);
                 mList.clear();
             }
-            calcution();
+            calcution(timeView,cpuView,meminfoView);
             mTestDataList.clear();
         });
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void calcution() {
+    public void calcution(TextView time,TextView cpuTime,TextView meminfoView) {
             long mtime = mTestDataList.stream().mapToLong(testData::getInstant).max().getAsLong();
             double atime = mTestDataList.stream().mapToLong(testData::getInstant).average().getAsDouble();
             long mCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).max().getAsLong();
@@ -111,6 +119,13 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "time: " + mtime + " : " + atime);
             Log.d(TAG, "CPU_time: " + mCPU_time + " : " + aCPU_time);
             Log.d(TAG, "Meminfo: " + mMeminfo + " : " + aMeminfo);
+            time.setText("time: " + mtime + " : " + atime);
+            cpuTime.setText("CPU_time: " + mCPU_time + " : " + aCPU_time);
+            meminfoView.setText("Meminfo: " + mMeminfo + " : " + aMeminfo);
+
+
+
+
     }
 
     public final long getAvailableMemory() {
