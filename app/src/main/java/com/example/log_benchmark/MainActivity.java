@@ -3,9 +3,11 @@ package com.example.log_benchmark;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
     protected int thread_count;
     List<myThread> mList = new ArrayList<>();
+    List<Long> mCPU_time = new ArrayList<>();
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -68,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 thread_count = Integer.parseInt(editText.getText().toString());
                 calculationTimes = 10000 / thread_count;
+                Log.d(TAG, "onClick: 111");
                 ALog.d("MainActivity", "onClick: " + thread_count);
                 for (int i = 0; i < thread_count; i++) {
                     myThread myThread = new myThread(("myThread" + i), calculationTimes);
@@ -80,26 +84,62 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
+                long meminfoBegin = getAvailableMemory();
                 Instant beginTime = Instant.now();
+                long CPU_begin = 0, CPU_end = 0, CPU_sum = 0;
+
                 for (int i = 0; i < thread_count; i++) {
+//                    CPU_begin = Debug.threadCpuTimeNanos();
                     mList.get(i).start();
                 }
                 for (int i = 0; i < thread_count; i++) {
                     try {
                         mList.get(i).join();
+//                        CPU_end = Debug.threadCpuTimeNanos();
+//                        mCPU_time.add(CPU_end-CPU_begin);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
 
                 System.gc();
+
+
                 Instant endTime = Instant.now();
+                long meminfoEnd = getAvailableMemory();
+//                for(int i=0;i<thread_count;i++){
+//                    CPU_sum+= mCPU_time.get(i);
+//                }
+
                 ALog.d(TAG, "ToMills: " + Duration.between(beginTime, endTime).toMillis());
+                ALog.d(TAG, "CPU_SUM_TIME" + CPU_sum);
+//                ALog.d(TAG,"MeminfoBegin : "+(meminfoBegin)+" , MeminfoEnd : "+meminfoEnd);
+                ALog.d(TAG,"MemoryUsage : "+(meminfoBegin-meminfoEnd));
                 mList.clear();
-
-
             }
         });
 
     }
+
+    public final long getAvailableMemory() {
+
+        ActivityManager.MemoryInfo localMemoryInfo = new ActivityManager.MemoryInfo();
+        ActivityManager localActivityManager = (ActivityManager) getApplicationContext().getSystemService(ACTIVITY_SERVICE);
+        if (localActivityManager != null) {
+            localActivityManager.getMemoryInfo(localMemoryInfo);
+        }
+        //可用内存
+        long l = localMemoryInfo.availMem/1000000;
+        //是否达到最低内存
+        boolean isLowMem = localMemoryInfo.lowMemory;
+        //临界值，达到这个值，进程就要被杀死
+        long threshold = localMemoryInfo.threshold/1000000;
+        //总内存
+        long totalMem = localMemoryInfo.totalMem/1000000;
+
+        Log.i(TAG, "avail:" + l + ",isLowMem:" + isLowMem + ",threshold:" + threshold + ",totalMem:" + totalMem);
+        return l;
+
+    }
+
 }
