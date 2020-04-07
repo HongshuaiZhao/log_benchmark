@@ -4,13 +4,10 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityManager;
-import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
-import android.os.Environment;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -20,23 +17,18 @@ import com.ss.android.agilelogger.ALogConfig;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.OptionalLong;
 import java.util.logging.Logger;
 
-import static com.ss.android.agilelogger.ALog.getContext;
 
 /**
  * @author bytedance
  * @target 寻找打印log的方法，并在不同多线程环境下进行测试
  */
 public class MainActivity extends AppCompatActivity {
-    public Context mContext;
     private int calculationTimes;
     public static final String TAG = "MainActivity";
-    protected int thread_count;
+    protected int threadCount;
     public int test_Count;
     List<testData> mTestDataList = new ArrayList<>();
     List<myThread> mList = new ArrayList<>();
@@ -55,72 +47,70 @@ public class MainActivity extends AppCompatActivity {
         Button commit_button = findViewById(R.id.commit);
         Button Log_start = findViewById(R.id.Log_start);
 
-        commit_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                test_Count = Integer.parseInt(testCount.getText().toString());
-                thread_count = Integer.parseInt(editText.getText().toString());
-                calculationTimes = 10000 / thread_count;
-                ALog.d("MainActivity", "onClick: " + thread_count);
-                for (int i = 0; i < thread_count; i++) {
+        commit_button.setOnClickListener(v -> {
+            test_Count = Integer.parseInt(testCount.getText().toString());
+            threadCount = Integer.parseInt(editText.getText().toString());
+            calculationTimes = 10000 / threadCount;
+            ALog.d("MainActivity", "onClick: " + threadCount);
+
+        });
+
+        Log_start.setOnClickListener(v -> {
+            for (int times = 0; times < test_Count; times++) {
+                for (int i = 0; i < threadCount; i++) {
                     myThread myThread = new myThread(("myThread" + i), calculationTimes);
                     mList.add(myThread);
                 }
-            }
-        });
-
-        Log_start.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                for (int times = 0; times < test_Count; times++) {
-                    testData mytestData = new testData();
-                    long meminfoBegin = getAvailableMemory();
-                    Instant beginTime = Instant.now();
-                    long CPU_begin = 0, CPU_end = 0, CPU_sum = 0;
-
-                    for (int i = 0; i < thread_count; i++) {
-                        CPU_begin = Debug.threadCpuTimeNanos();
-                        mList.get(i).start();
-                    }
-                    for (int i = 0; i < thread_count; i++) {
-                        try {
-                            mList.get(i).join();
-                            CPU_end = Debug.threadCpuTimeNanos();
-                            mCPU_time.add(CPU_end - CPU_begin);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    System.gc();
+                testData mytestData = new testData();
+                long meminfoBegin = getAvailableMemory();
+                Instant beginTime = Instant.now();
+                long CPU_begin = 0, CPU_end = 0, CPU_sum = 0;
 
 
-                    Instant endTime = Instant.now();
-                    long meminfoEnd = getAvailableMemory();
-                    for (int i = 0; i < thread_count; i++) {
-                        CPU_sum += mCPU_time.get(i);
-                    }
-                    mytestData.setInstant(Duration.between(beginTime,endTime).toMillis());
-                    mytestData.setCPU_Time(CPU_sum/1000000);
-                    mytestData.setMem_usage(meminfoBegin-meminfoEnd);
-                    mTestDataList.add(mytestData);
-                    ALog.d(TAG, "ToMills: " + Duration.between(beginTime, endTime).toMillis());
-                    ALog.d(TAG, "CPU_SUM_TIME : " + CPU_sum / 1000000);
-                    ALog.d(TAG, "MemoryUsage : " + (meminfoBegin - meminfoEnd));
-                    mList.clear();
+                for (int i = 0; i < threadCount; i++) {
+                    CPU_begin = Debug.threadCpuTimeNanos();
+                    mList.get(i).start();
                 }
-                calcution();
+                for (int i = 0; i < threadCount; i++) {
+                    try {
+                        mList.get(i).join();
+                        CPU_end = Debug.threadCpuTimeNanos();
+                        mCPU_time.add(CPU_end - CPU_begin);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
 
+                System.gc();
+
+                Instant endTime = Instant.now();
+                long meminfoEnd = getAvailableMemory();
+                for (int i = 0; i < threadCount; i++) {
+                    CPU_sum += mCPU_time.get(i);
+                }
+                mytestData.setInstant(Duration.between(beginTime, endTime).toMillis());
+                mytestData.setCPU_Time(CPU_sum / 1000000);
+                mytestData.setMem_usage(meminfoBegin - meminfoEnd);
+                mTestDataList.add(mytestData);
+                mList.clear();
             }
+            calcution();
+            mTestDataList.clear();
         });
 
     }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void calcution(){
-        for(int i=0;i<test_Count;i++){
+    public void calcution() {
             long mtime = mTestDataList.stream().mapToLong(testData::getInstant).max().getAsLong();
-            Log.d(TAG, "calcution: "+mtime);
-        }
+            double atime = mTestDataList.stream().mapToLong(testData::getInstant).average().getAsDouble();
+            long mCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).max().getAsLong();
+            double aCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).average().getAsDouble();
+            long mMeminfo = mTestDataList.stream().mapToLong(testData::getMem_usage).max().getAsLong();
+            double aMeminfo = mTestDataList.stream().mapToLong(testData::getMem_usage).average().getAsDouble();
+            Log.d(TAG, "time: " + mtime + " : " + atime);
+            Log.d(TAG, "CPU_time: " + mCPU_time + " : " + aCPU_time);
+            Log.d(TAG, "Meminfo: " + mMeminfo + " : " + aMeminfo);
     }
 
     public final long getAvailableMemory() {
@@ -139,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         //总内存
         long totalMem = localMemoryInfo.totalMem / 1000000;
 
-        Log.i(TAG, "avail:" + l + ",isLowMem:" + isLowMem + ",threshold:" + threshold + ",totalMem:" + totalMem);
+        Log.d(TAG, "avail:" + l + ",isLowMem:" + isLowMem + ",threshold:" + threshold + ",totalMem:" + totalMem);
         return l;
 
     }
