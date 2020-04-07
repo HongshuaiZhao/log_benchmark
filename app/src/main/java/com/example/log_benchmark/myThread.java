@@ -14,16 +14,17 @@ import static com.example.log_benchmark.MainActivity.TAG;
 public class myThread extends Thread {
     public String name;
     public int calculationTimes;
+
     @Override
     public void run() {
-        for(int i=calculationTimes;i>0;i--) {
-            ALog.d("MainActivity",name+": run: "+i);
+        for (int i = calculationTimes; i > 0; i--) {
+            ALog.d("MainActivity", name + ": run: " + i);
         }
     }
 
-    public myThread(String name,int calculationTimes){
-        this.name=name;
-        this.calculationTimes=calculationTimes;
-        ALog.d("MainActivity",name);
+    public myThread(String name, int calculationTimes) {
+        this.name = name;
+        this.calculationTimes = calculationTimes;
+        ALog.d("MainActivity", name);
     }
 }

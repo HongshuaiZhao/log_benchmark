@@ -100,28 +100,26 @@ public class MainActivity extends AppCompatActivity {
                 mTestDataList.add(mytestData);
                 mList.clear();
             }
-            calcution(timeView,cpuView,meminfoView);
+            calcution(timeView, cpuView, meminfoView);
             mTestDataList.clear();
         });
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public void calcution(TextView time,TextView cpuTime,TextView meminfoView) {
-            long mtime = mTestDataList.stream().mapToLong(testData::getInstant).max().getAsLong();
-            double atime = mTestDataList.stream().mapToLong(testData::getInstant).average().getAsDouble();
-            long mCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).max().getAsLong();
-            double aCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).average().getAsDouble();
-            long mMeminfo = mTestDataList.stream().mapToLong(testData::getMem_usage).max().getAsLong();
-            double aMeminfo = mTestDataList.stream().mapToLong(testData::getMem_usage).average().getAsDouble();
-            Log.d(TAG, "time: " + mtime + " : " + atime);
-            Log.d(TAG, "CPU_time: " + mCPU_time + " : " + aCPU_time);
-            Log.d(TAG, "Meminfo: " + mMeminfo + " : " + aMeminfo);
-            time.setText("time: " + mtime + " : " + atime);
-            cpuTime.setText("CPU_time: " + mCPU_time + " : " + aCPU_time);
-            meminfoView.setText("Meminfo: " + mMeminfo + " : " + aMeminfo);
-
-
+    public void calcution(TextView time, TextView cpuTime, TextView meminfoView) {
+        long mtime = mTestDataList.stream().mapToLong(testData::getInstant).max().getAsLong();
+        double atime = mTestDataList.stream().mapToLong(testData::getInstant).average().getAsDouble();
+        long mCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).max().getAsLong();
+        double aCPU_time = mTestDataList.stream().mapToLong(testData::getCPU_Time).average().getAsDouble();
+        long mMeminfo = mTestDataList.stream().mapToLong(testData::getMem_usage).max().getAsLong();
+        double aMeminfo = mTestDataList.stream().mapToLong(testData::getMem_usage).average().getAsDouble();
+        Log.d(TAG, "time: " + mtime + " : " + atime);
+        Log.d(TAG, "CPU_time: " + mCPU_time + " : " + aCPU_time);
+        Log.d(TAG, "Meminfo: " + mMeminfo + " : " + aMeminfo);
+        time.setText("time: " + mtime + " : " + atime);
+        cpuTime.setText("CPU_time: " + mCPU_time + " : " + aCPU_time);
+        meminfoView.setText("Meminfo: " + mMeminfo + " : " + aMeminfo);
 
 
     }
