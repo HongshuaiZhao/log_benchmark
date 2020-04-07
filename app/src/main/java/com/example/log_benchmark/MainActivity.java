@@ -44,23 +44,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        alogInit();
 
-//        getContext().getApplicationContext()
-//        Log.d(TAG, "onCreate: "+getContext());
-        // 先配置 ALog 参数
-        ALogConfig config = new ALogConfig.Builder(getApplicationContext())
-                // 日志目录中最大缓存大小, 默认20M, 超过后, 会删除最旧的日志
-                .setMaxDirSize(20 * 1024 * 1024)
-                // 每个日志分片大小, 默认2M, 考虑上行带宽的限制, 不宜超过5M
-                .setPerSize(2 * 1024 * 1024)
-                .build();
 
-        ALog.setsPackageClassName(Logger.class.getCanonicalName());
-
-//// 初始化, 初始化后, 会将日志写到文件中, 不初始化, 则输出在控制台
-//        if (!BuildConfig.DEBUG) {
-//            ALog.init(config);
-//        }
 
         final EditText editText = findViewById(R.id.ThreadNumber);
         Button commit_button = findViewById(R.id.commit);
@@ -89,14 +75,14 @@ public class MainActivity extends AppCompatActivity {
                 long CPU_begin = 0, CPU_end = 0, CPU_sum = 0;
 
                 for (int i = 0; i < thread_count; i++) {
-//                    CPU_begin = Debug.threadCpuTimeNanos();
+                    CPU_begin = Debug.threadCpuTimeNanos();
                     mList.get(i).start();
                 }
                 for (int i = 0; i < thread_count; i++) {
                     try {
                         mList.get(i).join();
-//                        CPU_end = Debug.threadCpuTimeNanos();
-//                        mCPU_time.add(CPU_end-CPU_begin);
+                        CPU_end = Debug.threadCpuTimeNanos();
+                        mCPU_time.add(CPU_end - CPU_begin);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -107,14 +93,13 @@ public class MainActivity extends AppCompatActivity {
 
                 Instant endTime = Instant.now();
                 long meminfoEnd = getAvailableMemory();
-//                for(int i=0;i<thread_count;i++){
-//                    CPU_sum+= mCPU_time.get(i);
-//                }
+                for (int i = 0; i < thread_count; i++) {
+                    CPU_sum += mCPU_time.get(i);
+                }
 
                 ALog.d(TAG, "ToMills: " + Duration.between(beginTime, endTime).toMillis());
-                ALog.d(TAG, "CPU_SUM_TIME" + CPU_sum);
-//                ALog.d(TAG,"MeminfoBegin : "+(meminfoBegin)+" , MeminfoEnd : "+meminfoEnd);
-                ALog.d(TAG,"MemoryUsage : "+(meminfoBegin-meminfoEnd));
+                ALog.d(TAG, "CPU_SUM_TIME : " + CPU_sum/1000000);
+                ALog.d(TAG, "MemoryUsage : " + (meminfoBegin - meminfoEnd));
                 mList.clear();
             }
         });
@@ -129,17 +114,30 @@ public class MainActivity extends AppCompatActivity {
             localActivityManager.getMemoryInfo(localMemoryInfo);
         }
         //可用内存
-        long l = localMemoryInfo.availMem/1000000;
+        long l = localMemoryInfo.availMem / 1000000;
         //是否达到最低内存
         boolean isLowMem = localMemoryInfo.lowMemory;
         //临界值，达到这个值，进程就要被杀死
-        long threshold = localMemoryInfo.threshold/1000000;
+        long threshold = localMemoryInfo.threshold / 1000000;
         //总内存
-        long totalMem = localMemoryInfo.totalMem/1000000;
+        long totalMem = localMemoryInfo.totalMem / 1000000;
 
         Log.i(TAG, "avail:" + l + ",isLowMem:" + isLowMem + ",threshold:" + threshold + ",totalMem:" + totalMem);
         return l;
 
+    }
+
+
+    public void alogInit() {
+        // 先配置 ALog 参数
+        ALogConfig config = new ALogConfig.Builder(getApplicationContext())
+                // 日志目录中最大缓存大小, 默认20M, 超过后, 会删除最旧的日志
+                .setMaxDirSize(20 * 1024 * 1024)
+                // 每个日志分片大小, 默认2M, 考虑上行带宽的限制, 不宜超过5M
+                .setPerSize(2 * 1024 * 1024)
+                .build();
+
+        ALog.setsPackageClassName(Logger.class.getCanonicalName());
     }
 
 }
