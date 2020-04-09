@@ -124,4 +124,44 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textview" />
 
+    <Button
+        android:id="@+id/xlog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Xlog"
+        app:layout_constraintEnd_toStartOf="@+id/logan"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="219dp" />
+
+    <Button
+        android:id="@+id/alog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alog"
+        app:layout_constraintBaseline_toBaselineOf="@+id/logan"
+        app:layout_constraintEnd_toStartOf="@+id/alogV2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/logan" />
+
+    <Button
+        android:id="@+id/alogV2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AlogV2"
+        app:layout_constraintBaseline_toBaselineOf="@+id/alog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/alog" />
+
+    <Button
+        android:id="@+id/logan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Logan"
+        app:layout_constraintBaseline_toBaselineOf="@+id/xlog"
+        app:layout_constraintEnd_toStartOf="@+id/alog"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/xlog" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

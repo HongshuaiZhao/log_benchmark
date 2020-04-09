@@ -19,6 +19,7 @@ public class myThread extends Thread {
     public void run() {
         for (int i = calculationTimes; i > 0; i--) {
             ALog.d("MainActivity", name + ": run: " + i);
+
         }
     }
 
