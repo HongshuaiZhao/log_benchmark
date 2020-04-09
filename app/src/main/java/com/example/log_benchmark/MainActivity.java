@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        alogInit();
 
 
         final EditText testCount = findViewById(R.id.testcount);
@@ -81,15 +81,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         commit_button.setOnClickListener(v -> {
             test_Count = Integer.parseInt(testCount.getText().toString());
             threadCount = Integer.parseInt(editText.getText().toString());
+            switch (logType) {
+                case XLOG:
+                    xlogInit();
+                    break;
+                case LOGAN:
+                    loganInit();
+                    break;
+                case ALOG:
+                    alogInit();
+                    break;
+                case ALOGV2:
+                    alogV2Init();
+                    break;
+                default:
+                    android.util.Log.d("MainActivity","commit_button Init failed!");
+            }
             calculationTimes = 10000 / threadCount;
-            ALog.d("MainActivity", "onClick: " + threadCount);
+            ALog.d("MainActivity", "Init_Success: " + threadCount);
 
         });
 
         Log_start.setOnClickListener(v -> {
             for (int times = 0; times < test_Count; times++) {
                 for (int i = 0; i < threadCount; i++) {
-                    myThread myThread = new myThread(("myThread" + i), calculationTimes);
+                    myThread myThread = new myThread(("myThread" + i), calculationTimes,logType);
                     mList.add(myThread);
                 }
                 testData mytestData = new testData();
@@ -142,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void calcution(TextView time, TextView cpuTime, TextView meminfoView) {
         long mtime = mTestDataList.stream().mapToLong(testData::getInstant).max().getAsLong();
@@ -220,10 +237,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final String SDCARD = Environment.getExternalStorageDirectory().getAbsolutePath();
         final String logPath = SDCARD + "/marssample/log";
 
-// this is necessary, or may crash for SIGBUS
+        // this is necessary, or may crash for SIGBUS
         final String cachePath = this.getFilesDir() + "/xlog";
 
-//init xlog
+        //init xlog
         if (BuildConfig.DEBUG) {
             Xlog.appenderOpen(Xlog.LEVEL_DEBUG, Xlog.AppednerModeAsync, cachePath, logPath, "MarsSample", 0, "");
             Xlog.setConsoleLogOpen(true);
@@ -278,6 +295,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.alogV2:
                 logType = ALOGV2;
+                break;
+            default:
+                android.util.Log.d("MainActivity","set logType failed");
         }
     }
 }
