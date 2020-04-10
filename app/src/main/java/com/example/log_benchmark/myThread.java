@@ -1,5 +1,7 @@
 package com.example.log_benchmark;
 
+import android.os.Debug;
+
 import com.bytedance.android.alog.Alog;
 import com.dianping.logan.Logan;
 import com.ss.android.agilelogger.ALog;
@@ -20,10 +22,17 @@ public class myThread extends Thread {
     public String name;
     public int calculationTimes;
     public int logType;
+    private long CPUTime;
 
+
+    public long getCPUTime() {
+        return CPUTime;
+    }
 
     @Override
     public void run() {
+        long begin,end;
+        begin = Debug.threadCpuTimeNanos();
         for (int i = calculationTimes; i > 0; i--) {
             switch (logType) {
                 case XLOG:
@@ -39,15 +48,17 @@ public class myThread extends Thread {
                     com.bytedance.android.alog.Log.d("MainActivity", name + ": alogv2 run: " + i);
                     break;
                 default:
-                    android.util.Log.d("MainActivity","init failed");
+                    android.util.Log.d("MainActivity", "init failed");
             }
         }
+        end = Debug.threadCpuTimeNanos();
+        CPUTime = end-begin;
     }
 
     public myThread(String name, int calculationTimes, int logType) {
         this.name = name;
         this.calculationTimes = calculationTimes;
         this.logType = logType;
-        ALog.d("MainActivity", name);
+        android.util.Log.d("MainActivity", name);
     }
 }

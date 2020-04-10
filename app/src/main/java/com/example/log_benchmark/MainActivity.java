@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     alogV2Init();
                     break;
                 default:
-                    android.util.Log.d("MainActivity","commit_button Init failed!");
+                    android.util.Log.d("MainActivity", "commit_button Init failed!");
             }
             calculationTimes = 10000 / threadCount;
             ALog.d("MainActivity", "Init_Success: " + threadCount);
@@ -105,17 +106,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log_start.setOnClickListener(v -> {
             for (int times = 0; times < test_Count; times++) {
                 for (int i = 0; i < threadCount; i++) {
-                    myThread myThread = new myThread(("myThread" + i), calculationTimes,logType);
+                    myThread myThread = new myThread(("myThread" + i), calculationTimes, logType);
                     mList.add(myThread);
                 }
                 testData mytestData = new testData();
 //                long meminfoBegin = getAvailableMemory();
-                long meminfoBegin = getMemory();
+                long meminfoBegin = getMemory(this);
                 ALog.d("test", "begin : " + meminfoBegin);
                 for (int i = 0; i < 100000; i++) {
                     mTestData.add("asdasfgad" + i);
                 }
-                long meminfoTest = getMemory();
+                long meminfoTest = getMemory(this);
                 ALog.d("test", "test : " + meminfoTest);
 
                 Instant beginTime = Instant.now();
@@ -123,14 +124,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
                 for (int i = 0; i < threadCount; i++) {
-                    CPU_begin = Debug.threadCpuTimeNanos();
+//                    CPU_begin = Debug.threadCpuTimeNanos();
                     mList.get(i).start();
                 }
                 for (int i = 0; i < threadCount; i++) {
                     try {
                         mList.get(i).join();
-                        CPU_end = Debug.threadCpuTimeNanos();
-                        mCPU_time.add(CPU_end - CPU_begin);
+//                        CPU_end = Debug.threadCpuTimeNanos();
+                        mCPU_time.add(mList.get(i).getCPUTime());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -140,20 +141,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 Instant endTime = Instant.now();
 //                long meminfoEnd = getAvailableMemory();
-                long meminfoEnd = getMemory();
+                long meminfoEnd = getMemory(this);
                 ALog.d("test", "end : " + meminfoEnd);
                 for (int i = 0; i < threadCount; i++) {
+                    android.util.Log.d("123", String.valueOf(mCPU_time.get(i)));
                     CPU_sum += mCPU_time.get(i);
                 }
 
                 mytestData.setInstant(Duration.between(beginTime, endTime).toMillis());
-                mytestData.setCPU_Time(CPU_sum / 1000000);
+                mytestData.setCPU_Time(CPU_sum /1000000);
                 mytestData.setMem_usage(meminfoBegin - meminfoEnd);
                 mTestDataList.add(mytestData);
-                mList.clear();
+                mList = new ArrayList<>();
             }
             calcution(timeView, cpuView, meminfoView);
-            mTestDataList.clear();
+            mTestDataList = new ArrayList<>();
         });
 
     }
@@ -178,10 +180,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    public final long getMemory() {
-        ActivityManager mActivityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+    public final long getMemory(Context context) {
+        ActivityManager mActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         int pid = Process.myPid();
-        ALog.d("pid", "mypid : " + pid);
         int[] pids = {pid};
 
         Class clazz = new Debug.MemoryInfo().getClass();
@@ -196,14 +197,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     field.setAccessible(true);
                     String name = field.getName();
                     Object val = field.get(v);
-                    ALog.d("1111", "getMemory: " + name + " " + val.toString());
+                    android.util.Log.d("1111", "getMemory: " + name + " " + val.toString());
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
         });
 
-        long sum = (memoryInfos[0].getTotalPrivateDirty());
+        long sum = (memoryInfos[0].dalvikPrivateDirty);
         return sum;
     }
 
@@ -225,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //总内存
         long totalMem = localMemoryInfo.totalMem / 1000000;
 
-        ALog.d(TAG, "avail:" + l + ",isLowMem:" + isLowMem + ",threshold:" + threshold + ",totalMem:" + totalMem);
+        android.util.Log.d(TAG, "avail:" + l + ",isLowMem:" + isLowMem + ",threshold:" + threshold + ",totalMem:" + totalMem);
         return l;
 
     }
@@ -297,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 logType = ALOGV2;
                 break;
             default:
-                android.util.Log.d("MainActivity","set logType failed");
+                android.util.Log.d("MainActivity", "set logType failed");
         }
     }
 }
